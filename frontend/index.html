@@ -1,0 +1,301 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Credit Risk Assessment — AI-Powered Prediction</title>
+  <meta name="description" content="Instant AI-powered credit risk assessment using a Random Forest model trained on the German Credit Dataset. Get real-time approval predictions with probability scores." />
+  <link rel="stylesheet" href="style.css" />
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>💳</text></svg>" />
+</head>
+<body>
+
+<div class="app-wrapper">
+
+  <!-- ── Header ── -->
+  <header class="header">
+    <div class="header-badge">
+      <span class="dot"></span>
+      AI-Powered · Random Forest · German Credit Dataset
+    </div>
+    <h1>Credit Risk Assessment</h1>
+    <p>Fill in the applicant details below to receive an instant AI credit risk prediction with probability scores.</p>
+  </header>
+
+  <!-- ── Main Grid ── -->
+  <main class="main-grid">
+
+    <!-- Left: Form Panel -->
+    <section class="glass-card form-panel" aria-label="Applicant Form">
+
+      <div class="form-panel-header">
+        <div class="panel-icon">📊</div>
+        <div>
+          <h2>Applicant Details</h2>
+          <p>Complete all sections for an accurate assessment</p>
+        </div>
+      </div>
+
+      <!-- Progress bar -->
+      <div style="margin-bottom:24px;">
+        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:8px;">
+          <span style="font-size:11px; font-weight:600; letter-spacing:0.08em; text-transform:uppercase; color:var(--text-muted);">Completion</span>
+          <span id="progressText" style="font-size:11px; font-weight:600; color:var(--accent-blue); font-family:'Outfit',sans-serif;">0 / 20 fields</span>
+        </div>
+        <div style="height:5px; background:rgba(255,255,255,0.05); border-radius:999px; overflow:hidden;">
+          <div id="progressBar" style="height:100%; width:0%; background:var(--grad-primary); border-radius:999px; transition:width 0.4s cubic-bezier(0.4,0,0.2,1);"></div>
+        </div>
+      </div>
+
+      <form id="applicantForm" novalidate>
+        <!-- Sections injected by app.js -->
+        <div id="formBody"></div>
+
+        <!-- Action Buttons -->
+        <div style="display:flex; gap:10px; margin-top:24px; flex-wrap:wrap;">
+          <button type="submit" class="submit-btn" id="submitBtn" style="flex:1; min-width:180px;">
+            <span class="btn-inner">
+              <span class="spinner" aria-hidden="true"></span>
+              <span class="btn-text">Run Credit Assessment</span>
+              <svg width="16" height="16" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+                <path d="M3 8h10M9 4l4 4-4 4" stroke="white" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+              </svg>
+            </span>
+          </button>
+
+          <button type="button" id="fillSample" title="Load sample applicant data" style="
+            padding: 14px 18px;
+            background: rgba(79,142,247,0.1);
+            border: 1px solid rgba(79,142,247,0.25);
+            border-radius: 14px;
+            color: #4f8ef7;
+            font-family: 'Inter', sans-serif;
+            font-size: 13px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: 0.25s ease;
+            white-space: nowrap;
+          " onmouseover="this.style.background='rgba(79,142,247,0.18)'"
+             onmouseout="this.style.background='rgba(79,142,247,0.1)'">
+            ✨ Sample Data
+          </button>
+
+          <button type="button" id="resetBtn" title="Clear all fields" style="
+            padding: 14px 18px;
+            background: rgba(255,255,255,0.04);
+            border: 1px solid rgba(255,255,255,0.08);
+            border-radius: 14px;
+            color: #8b9cc8;
+            font-family: 'Inter', sans-serif;
+            font-size: 13px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: 0.25s ease;
+            white-space: nowrap;
+          " onmouseover="this.style.background='rgba(255,255,255,0.08)'"
+             onmouseout="this.style.background='rgba(255,255,255,0.04)'">
+            <svg width="14" height="14" viewBox="0 0 14 14" fill="none" xmlns="http://www.w3.org/2000/svg" style="display:inline-block;vertical-align:middle;margin-right:4px;">
+              <path d="M2 7a5 5 0 1 1 1.5 3.5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+              <path d="M2 10.5V7h3.5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+            </svg> Reset
+          </button>
+        </div>
+
+        <!-- Error Banner -->
+        <div class="error-banner" id="errorBanner" role="alert">
+          <span class="error-icon">⚠️</span>
+          <span id="errorMsg">An error occurred.</span>
+        </div>
+      </form>
+    </section>
+
+    <!-- Right: Results Panel -->
+    <aside class="results-panel" aria-label="Prediction Results" aria-live="polite">
+      <div class="glass-card results-card">
+
+        <div class="results-header">
+          <div class="panel-icon">🎯</div>
+          <h2>Assessment Result</h2>
+        </div>
+
+        <!-- Empty state -->
+        <div class="empty-state" id="emptyState">
+          <span class="empty-icon">📋</span>
+          <p>Complete the applicant form and click <strong>Run Credit Assessment</strong> to see the AI prediction here.</p>
+        </div>
+
+        <!-- Result content (hidden until prediction) -->
+        <div class="result-content" id="resultContent">
+
+          <!-- Verdict -->
+          <div class="verdict-section">
+            <div class="verdict-badge" id="verdictBadge">
+              <span class="verdict-icon">—</span>
+              <span>PENDING</span>
+            </div>
+          </div>
+
+          <!-- Gauge -->
+          <div class="gauge-section">
+            <div class="gauge-wrapper">
+              <canvas id="gaugeCanvas" width="200" height="140" aria-label="Probability gauge"></canvas>
+              <div class="gauge-center">
+                <span class="gauge-percent" id="gaugePercent">0%</span>
+                <span class="gauge-label">Good Credit</span>
+              </div>
+            </div>
+            <div id="riskPill" class="risk-pill low">
+              <span class="risk-dot"></span> RISK LEVEL
+            </div>
+          </div>
+
+          <!-- Probability Bars -->
+          <div class="prob-section">
+            <h3>Probability Breakdown</h3>
+
+            <div class="prob-bar-group">
+              <div class="prob-bar-meta">
+                <span class="prob-bar-label">✅ Good Credit</span>
+                <span class="prob-bar-value" id="goodVal">—</span>
+              </div>
+              <div class="prob-bar-track">
+                <div class="prob-bar-fill good" id="goodBar" role="progressbar"></div>
+              </div>
+            </div>
+
+            <div class="prob-bar-group">
+              <div class="prob-bar-meta">
+                <span class="prob-bar-label">❌ Bad Credit</span>
+                <span class="prob-bar-value" id="badVal">—</span>
+              </div>
+              <div class="prob-bar-track">
+                <div class="prob-bar-fill bad" id="badBar" role="progressbar"></div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Stats grid -->
+          <div class="stats-grid">
+            <div class="stat-card">
+              <div class="stat-label">Prediction</div>
+              <div class="stat-value" id="statPrediction">—</div>
+            </div>
+            <div class="stat-card">
+              <div class="stat-label">Risk Level</div>
+              <div class="stat-value" id="statRisk">—</div>
+            </div>
+          </div>
+
+          <!-- SHAP Explanations -->
+          <div style="margin-top:20px;">
+            <h3 style="font-size:11px;font-weight:600;letter-spacing:0.1em;text-transform:uppercase;color:var(--text-muted);margin-bottom:14px;">🔍 Why This Decision?</h3>
+            <div id="shapContainer"></div>
+            <p style="font-size:10px;color:var(--text-muted);margin-top:10px;line-height:1.5;">
+              Green bars = factors supporting good credit.<br>Red bars = factors increasing risk.
+            </p>
+          </div>
+
+        </div><!-- /result-content -->
+
+        <!-- Health bar -->
+        <div class="health-bar">
+          <span class="health-dot" id="healthDot"></span>
+          <span id="healthText">Checking API…</span>
+        </div>
+
+      </div><!-- /results-card -->
+
+      <!-- Model info card -->
+      <div class="glass-card" style="margin-top:16px; padding:20px;">
+        <div style="font-size:11px; font-weight:600; letter-spacing:0.1em; text-transform:uppercase; color:var(--text-muted); margin-bottom:12px;">
+          🧠 Model Info
+        </div>
+        <div style="display:grid; gap:8px;">
+          <div style="display:flex; justify-content:space-between; font-size:12.5px;">
+            <span style="color:var(--text-secondary)">Algorithm</span>
+            <span style="font-weight:600; color:var(--text-primary)">Random Forest</span>
+          </div>
+          <div style="display:flex; justify-content:space-between; font-size:12.5px;">
+            <span style="color:var(--text-secondary)">Dataset</span>
+            <span style="font-weight:600; color:var(--text-primary)">German Credit (UCI)</span>
+          </div>
+          <div style="display:flex; justify-content:space-between; font-size:12.5px;">
+            <span style="color:var(--text-secondary)">Features</span>
+            <span style="font-weight:600; color:var(--text-primary)">20</span>
+          </div>
+          <div style="display:flex; justify-content:space-between; font-size:12.5px;">
+            <span style="color:var(--text-secondary)">ROC-AUC</span>
+            <span style="font-weight:600; color:var(--accent-blue)">≈ 0.79</span>
+          </div>
+          <div style="display:flex; justify-content:space-between; font-size:12.5px;">
+            <span style="color:var(--text-secondary)">Accuracy</span>
+            <span style="font-weight:600; color:var(--accent-blue)">≈ 79%</span>
+          </div>
+          <div style="margin-top:4px; padding-top:10px; border-top:1px solid var(--border); font-size:11px; color:var(--text-muted);">
+            Risk thresholds: &nbsp;
+            <span style="color:var(--success)">Low ≥70%</span> ·
+            <span style="color:var(--warning)">Medium 40–70%</span> ·
+            <span style="color:var(--danger)">High &lt;40%</span>
+          </div>
+        </div>
+      </div>
+
+    </aside>
+
+  </main><!-- /main-grid -->
+
+  <!-- ── Prediction History ── -->
+  <section style="margin-top:32px;" aria-label="Prediction History">
+    <div class="glass-card" style="padding:28px;">
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:20px;">
+        <div style="display:flex;align-items:center;gap:10px;">
+          <div class="panel-icon" style="font-size:16px;">📜</div>
+          <div>
+            <div style="font-family:'Outfit',sans-serif;font-size:1.1rem;font-weight:700;">Assessment History</div>
+            <div style="font-size:11px;color:var(--text-secondary);">Stored locally in your browser · up to 20 entries</div>
+          </div>
+        </div>
+        <button id="clearHistory" style="
+          padding:8px 16px;
+          background:rgba(247,95,95,0.1);
+          border:1px solid rgba(247,95,95,0.25);
+          border-radius:8px;
+          color:#f75f5f;
+          font-family:'Inter',sans-serif;
+          font-size:12px;
+          font-weight:600;
+          cursor:pointer;
+          transition:0.2s ease;
+        " onmouseover="this.style.background='rgba(247,95,95,0.2)'" onmouseout="this.style.background='rgba(247,95,95,0.1)'">
+          🗑 Clear History
+        </button>
+      </div>
+
+      <p id="historyEmpty" style="text-align:center;color:var(--text-muted);font-size:13px;padding:24px 0;display:block;">
+        No assessments yet. Run your first prediction above!
+      </p>
+
+      <div style="overflow-x:auto;">
+        <table id="historyTable" style="width:100%;border-collapse:collapse;font-size:12.5px;display:none;">
+          <thead>
+            <tr style="border-bottom:1px solid var(--border);">
+              <th style="text-align:left;padding:8px 12px;color:var(--text-muted);font-weight:600;font-size:10px;text-transform:uppercase;letter-spacing:0.08em;">Time</th>
+              <th style="text-align:left;padding:8px 12px;color:var(--text-muted);font-weight:600;font-size:10px;text-transform:uppercase;letter-spacing:0.08em;">Verdict</th>
+              <th style="text-align:left;padding:8px 12px;color:var(--text-muted);font-weight:600;font-size:10px;text-transform:uppercase;letter-spacing:0.08em;">Risk</th>
+              <th style="text-align:left;padding:8px 12px;color:var(--text-muted);font-weight:600;font-size:10px;text-transform:uppercase;letter-spacing:0.08em;">Prob. Good</th>
+              <th style="text-align:left;padding:8px 12px;color:var(--text-muted);font-weight:600;font-size:10px;text-transform:uppercase;letter-spacing:0.08em;">Amount</th>
+              <th style="text-align:left;padding:8px 12px;color:var(--text-muted);font-weight:600;font-size:10px;text-transform:uppercase;letter-spacing:0.08em;">Duration</th>
+              <th style="text-align:left;padding:8px 12px;color:var(--text-muted);font-weight:600;font-size:10px;text-transform:uppercase;letter-spacing:0.08em;">Purpose</th>
+            </tr>
+          </thead>
+          <tbody id="historyBody"></tbody>
+        </table>
+      </div>
+    </div>
+  </section>
+
+</div><!-- /app-wrapper -->
+
+<script src="app.js"></script>
+</body>
+</html>
