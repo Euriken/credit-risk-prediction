@@ -124,3 +124,4 @@ Deploy to **Render** (free tier) or **HuggingFace Spaces** (Flask SDK).
 German Credit Risk Dataset — UCI ML Repository schema:
 - 1000 applicants, 20 features, binary target (`0=bad_credit`, `1=good_credit`)
 - ~70% good credit, ~30% bad credit (real-world distribution)
+- ---
